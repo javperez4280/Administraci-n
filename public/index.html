@@ -245,7 +245,7 @@ function dibujarAlumnos(){
   const als=st.alumnos,cs=cursosDe(als);
   st.filtroCurso=cs.includes(st.filtroCurso)?st.filtroCurso:'';
   const ver=als.filter(a=>!st.filtroCurso||a.curso===st.filtroCurso);
-  const puedeBorrar=U.rol!=='profe';
+  const sacar=!!st.sacar;
   $('#cont').innerHTML=`
    ${st.nuevos?vRevisionAlumnos():''}
    <div class="card">
@@ -260,9 +260,13 @@ function dibujarAlumnos(){
    <div class="card">
     <div class="fila"><h2 style="margin:0">Alumnos (${ver.length})</h2>
      <select onchange="st.filtroCurso=this.value;dibujarAlumnos()"><option value="">Todos los cursos</option>${cs.map(c=>`<option ${c===st.filtroCurso?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
-    ${ver.map(a=>`<div class="alumno"><div class="nom">${esc(nombreCompleto(a))}<small>${esc(a.curso)}</small></div>
-      <button class="ed" onclick="editarAlumno('${a.id}')" aria-label="Editar">✏️</button>
-      ${puedeBorrar?`<button class="x" onclick="borrarAlumno('${a.id}')" aria-label="Borrar">🗑</button>`:''}</div>`).join('')||'<p class="muted">Sin alumnos.</p>'}
+    ${sacar?`<div class="aviso">Marcá los alumnos que querés sacar. Su historial de asistencias se conserva.</div>`:''}
+    ${ver.map(a=>sacar
+      ?`<label class="alumno" style="margin:0;color:inherit;font-size:16px;cursor:pointer"><input type="checkbox" style="width:22px;height:22px;flex-shrink:0" ${st.sacar.has(a.id)?'checked':''} onchange="this.checked?st.sacar.add('${a.id}'):st.sacar.delete('${a.id}');$('#nSacar').textContent=st.sacar.size"><div class="nom">${esc(nombreCompleto(a))}<small>${esc(a.curso)}</small></div></label>`
+      :`<div class="alumno"><div class="nom">${esc(nombreCompleto(a))}<small>${esc(a.curso)}</small></div>
+      <button class="ed" onclick="editarAlumno('${a.id}')" aria-label="Editar">✏️</button></div>`).join('')||'<p class="muted">Sin alumnos.</p>'}
+    ${sacar?`<div class="fila"><button class="full sec" onclick="st.sacar=null;dibujarAlumnos()">Cancelar</button><button class="full rojo" onclick="sacarAlumnos()">Sacar (<span id="nSacar">${st.sacar.size}</span>)</button></div>`
+      :(ver.length?`<p style="text-align:right;margin:14px 0 0"><a href="#" class="muted" style="font-size:12px" onclick="st.sacar=new Set();dibujarAlumnos();return false">Sacar alumnos</a></p>`:'')}
    </div>`;
 }
 function vRevisionAlumnos(){
@@ -305,10 +309,10 @@ async function editarAlumno(id){
   if(!v)return;
   try{cargando(true,'Guardando…');await api('alumno_editar',{id,...v});await traerAlumnos(true);st.marcasKey=null;toast('Alumno actualizado');dibujarAlumnos()}catch(e){toast(e.message)}finally{cargando(false)}
 }
-async function borrarAlumno(id){
-  const a=st.alumnos.find(x=>x.id===id);
-  if(!await confirmar(`¿Borrar a ${nombreCompleto(a)}? Su historial de asistencias se conserva.`,'Borrar'))return;
-  try{cargando(true);await api('alumno_borrar',{id});await traerAlumnos(true);st.marcasKey=null;dibujarAlumnos()}catch(e){toast(e.message)}finally{cargando(false)}
+async function sacarAlumnos(){
+  const ids=[...st.sacar];if(!ids.length)return toast('No marcaste ningún alumno');
+  if(!await confirmar(`¿Sacar ${ids.length} alumno${ids.length>1?'s':''} de la lista? Su historial de asistencias se conserva.`,'Sacar'))return;
+  try{cargando(true,'Sacando…');await api('alumnos_sacar',{ids});st.sacar=null;await traerAlumnos(true);st.marcasKey=null;toast(`Se sacaron ${ids.length} alumnos`);dibujarAlumnos()}catch(e){toast(e.message)}finally{cargando(false)}
 }
 
 /* ================= PANEL DIRECTOR ================= */

@@ -175,10 +175,13 @@ const acciones = {
     await db.prepare('UPDATE alumnos SET apellido=?, nombre=?, curso=? WHERE id=?').bind(a.apellido, a.nombre, a.curso, d.id).run();
     return { ok: true };
   },
-  async alumno_borrar({ db, yo, d }) {
-    exigir(yo, 'director', 'admin');
-    await db.prepare('UPDATE alumnos SET activo=0 WHERE id=?').bind(d.id).run(); // se conserva su historial
-    return { ok: true };
+  async alumnos_sacar({ db, yo, d }) {
+    exigir(yo);
+    const ids = (Array.isArray(d.ids) ? d.ids : []).filter(x => typeof x === 'string').slice(0, 500);
+    if (!ids.length) throw new Falla('No hay alumnos para sacar');
+    // Se marcan como inactivos: dejan de aparecer pero su historial se conserva
+    await db.batch(ids.map(x => db.prepare('UPDATE alumnos SET activo=0 WHERE id=?').bind(x)));
+    return { sacados: ids.length };
   },
 
   /* ----- alumnos asistentes ----- */
