@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "administraci-n",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  // Base de datos compartida. Sin database_id: Cloudflare la crea sola al publicar.
+  "d1_databases": [{ "binding": "DB" }],
+  // Conserva las variables cargadas desde el panel de Cloudflare.
+  "keep_vars": true
+}

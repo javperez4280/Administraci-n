@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a8a">
+<title>Listado</title>
+<style>
+:root{--azul:#1e3a8a;--azul2:#2563eb;--verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;--gris:#64748b;--fondo:#f1f5f9;--borde:#e2e8f0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--fondo);color:#0f172a;font-size:16px}
+header{background:var(--azul);color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0}
+header small{opacity:.8;display:block;font-size:12px}
+main{padding:14px;max-width:760px;margin:0 auto;padding-bottom:90px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px #0001}
+h2{font-size:17px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--gris);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--borde);border-radius:10px;font-size:16px;background:#fff;font-family:inherit;color:inherit}
+textarea{min-height:120px}
+button{border:0;border-radius:10px;padding:12px 16px;font-size:15px;font-weight:600;cursor:pointer;background:var(--azul2);color:#fff;font-family:inherit}
+button.sec{background:#e2e8f0;color:#0f172a}
+button.rojo{background:var(--rojo)}
+button.verde{background:var(--verde)}
+button.full{width:100%;margin-top:12px}
+button:disabled{opacity:.5}
+a{color:var(--azul2)}
+.fila{display:flex;gap:8px;align-items:center}
+.fila>*{flex:1;min-width:0}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--borde);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+.tabs button{flex:1;background:none;color:var(--gris);border-radius:0;padding:10px 4px;font-size:12px}
+.tabs button b{display:block;font-size:20px}
+.tabs button.on{color:var(--azul2)}
+.alumno{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--borde)}
+.alumno:last-child{border:0}
+.alumno .nom{flex:1;min-width:0;overflow-wrap:anywhere}
+.alumno .nom small{color:var(--gris);display:block;font-size:12px}
+.alumno.duda{background:#fef3c7;border-radius:8px;padding-left:6px}
+.est{display:flex;gap:4px;flex-shrink:0}
+.est button{width:44px;height:44px;padding:0;background:#e2e8f0;color:#475569;font-size:15px}
+.est button.P.on{background:var(--verde);color:#fff}
+.est button.T.on{background:var(--amarillo);color:#fff}
+.est button.A.on{background:var(--rojo);color:#fff}
+.hora{width:86px;padding:6px;font-size:14px;flex-shrink:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600}
+.cP{background:#dcfce7;color:#166534}.cT{background:#fef3c7;color:#92400e}.cA{background:#fee2e2;color:#991b1b}.cN{background:#e2e8f0;color:#334155}
+.muted{color:var(--gris);font-size:13px}
+.curso{border:1px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:10px}
+.curso summary{cursor:pointer;font-weight:700;list-style:none}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 18px;border-radius:10px;z-index:40;font-size:14px;max-width:90%;text-align:center}
+.cargando{position:fixed;inset:0;background:#0f172acc;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;gap:14px;font-size:16px;text-align:center;padding:20px}
+.spin{width:44px;height:44px;border:4px solid #fff4;border-top-color:#fff;border-radius:50%;animation:g 1s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+.modal{position:fixed;inset:0;background:#0f172a99;display:flex;align-items:center;justify-content:center;z-index:35;padding:16px}
+.modal .card{width:100%;max-width:420px;margin:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:8px 6px;border-bottom:1px solid var(--borde);text-align:left}
+.big{font-size:28px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{border-radius:12px;padding:10px}
+.x{background:none;color:var(--rojo);padding:6px 8px;font-size:18px;flex-shrink:0}
+.ed{background:none;color:var(--azul2);padding:6px 8px;font-size:18px;flex-shrink:0}
+.aviso{background:#fef3c7;color:#92400e;border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+.error{background:#fee2e2;color:#991b1b;border-radius:10px;padding:12px;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="foto" accept="image/*" hidden>
+
+<script>
+/* =====================================================================
+   Listado — app de asistencia escolar.
+   Los datos viven en el servidor (Cloudflare Pages Functions + D1), en /api.
+   Tablas: alumnos (alumnos totales) y asistencias (alumnos asistentes).
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const hoy=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const ahora=()=>new Date().toTimeString().slice(0,5);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>String(s||'').trim().toLowerCase().replace(/(^|\s|-|')\S/g,m=>m.toUpperCase());
+const nombreCompleto=a=>[a.apellido,a.nombre].filter(Boolean).join(', ');
+const fechaLinda=f=>f?f.split('-').reverse().join('/'):'';
+const ROLES={profe:'Profe',director:'Director',admin:'Administrador'};
+const ESTADO={P:'Presente',T:'Tarde',A:'Ausente'};
+function toast(m,ms=2800){document.querySelectorAll('.toast').forEach(t=>t.remove());const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
+function cargando(on,msg='Cargando…'){let c=$('#carg');if(on){if(!c){c=document.createElement('div');c.id='carg';c.className='cargando';document.body.appendChild(c)}c.innerHTML=`<div class="spin"></div><div>${esc(msg)}</div>`}else c?.remove()}
+
+/* ---------- ventanas propias (reemplazan confirm/prompt, que no andan en APK) ---------- */
+function modal(html){return new Promise(res=>{
+  const d=document.createElement('div');d.className='modal';d.innerHTML=`<div class="card">${html}</div>`;
+  document.body.appendChild(d);d.querySelector('input')?.focus();
+  const fin=v=>{d.remove();res(v)};
+  d.addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b)fin(b.dataset.r==='ok'?Object.fromEntries([...d.querySelectorAll('[name]')].map(i=>[i.name,i.value])):null);else if(e.target===d)fin(null)});
+  d.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')d.querySelector('[data-r=ok]').click()});
+})}
+const confirmar=(m,si='Sí')=>modal(`<p style="margin-top:0">${esc(m)}</p><div class="fila"><button class="sec" data-r="no">Cancelar</button><button class="rojo" data-r="ok">${esc(si)}</button></div>`).then(v=>!!v);
+
+/* ---------- conexión con el servidor ---------- */
+const API_BASE=(()=>{const g=localStorage.getItem('listado_api');if(g)return g.replace(/\/$/,'');return /^https?:$/.test(location.protocol)?'':null})();
+let TOKEN=localStorage.getItem('listado_token')||'';
+let U=JSON.parse(localStorage.getItem('listado_usuario')||'null');
+async function api(accion,datos={}){
+  if(API_BASE===null)throw Error('Configurá la dirección del servidor');
+  let r;
+  try{r=await fetch(`${API_BASE}/api/${accion}`,{method:'POST',headers:{'content-type':'application/json',...(TOKEN?{authorization:'Bearer '+TOKEN}:{})},body:JSON.stringify(datos)})}
+  catch{throw Error('Sin conexión con el servidor. Revisá internet.')}
+  const j=await r.json().catch(()=>({error:'El servidor no respondió bien ('+r.status+')'}));
+  if(r.status===401&&!['login','registro'].includes(accion)){cerrarSesionLocal();render();throw Error(j.error||'Sesión vencida')}
+  if(!r.ok)throw Error(j.error||'Error '+r.status);
+  return j;
+}
+function guardarSesion(j){TOKEN=j.token;U=j.usuario;localStorage.setItem('listado_token',TOKEN);localStorage.setItem('listado_usuario',JSON.stringify(U))}
+function cerrarSesionLocal(){TOKEN='';U=null;localStorage.removeItem('listado_token');localStorage.removeItem('listado_usuario');st={};tab=''}
+async function salir(){try{await api('salir')}catch{}cerrarSesionLocal();render()}
+async function configurarServidor(){
+  const v=await modal(`<h2>Dirección del servidor</h2><p class="muted">Ejemplo: https://listado.pages.dev</p><input name="url" value="${esc(localStorage.getItem('listado_api')||'')}" autocapitalize="none"><div class="fila" style="margin-top:12px"><button class="sec" data-r="no">Cancelar</button><button data-r="ok">Guardar</button></div>`);
+  if(!v)return;const u=v.url.trim();u?localStorage.setItem('listado_api',u):localStorage.removeItem('listado_api');location.reload();
+}
+
+/* ================= ACCESO ================= */
+let tab='',st={};
+function pantallaAcceso(modo='login'){
+  $('#app').innerHTML=`
+  <header><div><h1>📋 Listado</h1><small>${modo==='crear'?'Crear cuenta':'Ingresar'}</small></div></header>
+  <main>
+   ${API_BASE===null?`<div class="aviso">Para usar la app hay que indicar la dirección del servidor. <a href="#" onclick="configurarServidor();return false">Configurar</a></div>`:''}
+   <form class="card" onsubmit="event.preventDefault();${modo==='crear'?'crearCuenta()':'ingresar()'}">
+    <h2>${modo==='crear'?'Crear cuenta':'Ingresar'}</h2>
+    ${modo==='crear'?'<label>Nombre y apellido</label><input id="n" autocomplete="name">':''}
+    <label>Usuario</label><input id="e" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+    ${modo==='crear'?'<p class="muted" style="margin:4px 0 0">Solo letras sin acento, números, punto o guion.</p>':''}
+    <label>Contraseña</label><input id="p" type="password" autocomplete="${modo==='crear'?'new-password':'current-password'}">
+    ${modo==='crear'?'<p class="muted">El administrador va a asignar si tu cuenta es de Profe o de Director.</p>':''}
+    <button class="full" type="submit">${modo==='crear'?'Crear cuenta':'Entrar'}</button>
+    <p class="muted" style="text-align:center;margin-top:14px">
+      ${modo==='crear'?'¿Ya tenés cuenta? <a href="#" onclick="pantallaAcceso(\'login\');return false">Ingresar</a>':'¿No tenés cuenta? <a href="#" onclick="pantallaAcceso(\'crear\');return false">Crear una</a>'}</p>
+   </form>
+   ${API_BASE!==''?`<p class="muted" style="text-align:center"><a href="#" onclick="configurarServidor();return false">⚙️ Servidor</a></p>`:''}
+  </main>`;
+}
+async function crearCuenta(){
+  const nombre=$('#n').value.trim(),usuario=$('#e').value.trim().toLowerCase(),pass=$('#p').value;
+  if(!nombre||!usuario||pass.length<4)return toast('Completá todo (contraseña de 4+ caracteres)');
+  try{cargando(true);guardarSesion(await api('registro',{nombre,usuario,pass}));render()}catch(e){toast(e.message)}finally{cargando(false)}
+}
+async function ingresar(){
+  const usuario=$('#e').value.trim().toLowerCase(),pass=$('#p').value;
+  if(!usuario||!pass)return toast('Completá usuario y contraseña');
+  try{cargando(true);guardarSesion(await api('login',{usuario,pass}));render()}catch(e){toast(e.message)}finally{cargando(false)}
+}
+function pantallaEspera(){
+  $('#app').innerHTML=`<header><div><h1>📋 Listado</h1><small>${esc(U.nombre)}</small></div><button class="sec" style="padding:8px 12px" onclick="salir()">Salir</button></header>
+  <main><div class="card" style="text-align:center"><div class="big">⏳</div><h2>Cuenta creada</h2>
+  <p class="muted">El administrador todavía no te asignó un rol (Profe o Director). Cuando lo haga, vas a poder entrar.</p>
+  <button class="full sec" onclick="revisarRol()">Volver a revisar</button></div></main>`;
+}
+async function revisarRol(){
+  try{cargando(true);const j=await api('yo');U=j.usuario;localStorage.setItem('listado_usuario',JSON.stringify(U));if(!U.rol)toast('Todavía sin rol asignado');render()}catch(e){toast(e.message)}finally{cargando(false)}
+}
+
+/* ================= ESTRUCTURA ================= */
+function render(){
+  if(!TOKEN||!U)return pantallaAcceso('login');
+  if(!U.rol)return pantallaEspera();
+  const tabs={
+    profe:[['lista','📝','Pasar lista'],['alumnos','👥','Alumnos']],
+    director:[['panel','📊','Panel'],['buscar','🔎','Por alumno'],['alumnos','👥','Alumnos']],
+    admin:[['cuentas','🔐','Cuentas'],['panel','📊','Panel'],['buscar','🔎','Por alumno'],['alumnos','👥','Alumnos']],
+  }[U.rol]||[];
+  if(!tabs.some(t=>t[0]===tab))tab=tabs[0]?.[0];
+  $('#app').innerHTML=`
+   <header><div><h1>📋 Listado</h1><small>${esc(U.nombre)} · ${ROLES[U.rol]||''}</small></div>
+   <button class="sec" style="padding:8px 12px" onclick="salir()">Salir</button></header>
+   <main id="cont"><div class="card muted">Cargando…</div></main>
+   <nav class="tabs">${tabs.map(t=>`<button class="${tab===t[0]?'on':''}" onclick="irA('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join('')}</nav>`;
+  const vista={lista:vLista,alumnos:vAlumnos,panel:vPanel,buscar:vBuscar,cuentas:vCuentas}[tab];
+  vista&&ejecutar(vista);
+}
+function irA(t){tab=t;st.alumnos=null;render()}
+async function ejecutar(fn){
+  try{await fn()}catch(e){if(!TOKEN)return;
+    $('#cont').innerHTML=`<div class="card"><div class="error">${esc(e.message)}</div><button class="full" onclick="render()">Reintentar</button></div>`}
+}
+async function traerAlumnos(forzar){if(!st.alumnos||forzar)st.alumnos=(await api('alumnos')).alumnos;return st.alumnos}
+const cursosDe=als=>[...new Set(als.map(a=>a.curso))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+
+/* ================= PASAR LISTA ================= */
+async function vLista(){
+  const als=await traerAlumnos();
+  const cs=cursosDe(als);
+  if(!cs.length){$('#cont').innerHTML=`<div class="card"><h2>Todavía no hay alumnos</h2><p class="muted">Primero cargá la lista de alumnos (por foto o escribiéndola).</p><button class="full" onclick="irA('alumnos')">👥 Cargar alumnos</button></div>`;return}
+  st.curso=cs.includes(st.curso)?st.curso:cs[0];
+  st.fecha=st.fecha||hoy();
+  if(st.marcasKey!==st.curso+'|'+st.fecha){
+    const r=await api('asistencias',{fecha:st.fecha,curso:st.curso});
+    st.marcas={};st.marcasKey=st.curso+'|'+st.fecha;st.yaGuardada=r.asistencias.length>0;st.cambios=false;
+    r.asistencias.forEach(x=>st.marcas[x.alumnoId]={estado:x.estado,hora:x.hora});
+  }
+  dibujarLista();
+}
+async function cambiarListaFiltro(campo,valor){
+  if(st.cambios&&!await confirmar('Hay cambios sin guardar. ¿Descartarlos?','Descartar')){dibujarLista();return}
+  st[campo]=valor;ejecutar(vLista);
+}
+function dibujarLista(){
+  const cs=cursosDe(st.alumnos);
+  const als=st.alumnos.filter(a=>a.curso===st.curso);
+  const c={P:0,T:0,A:0};als.forEach(a=>c[st.marcas[a.id]?.estado||'P']++);
+  $('#cont').innerHTML=`
+   <div class="card">
+    <div class="fila">
+     <div><label>Curso</label><select onchange="cambiarListaFiltro('curso',this.value)">${cs.map(x=>`<option ${x===st.curso?'selected':''}>${esc(x)}</option>`).join('')}</select></div>
+     <div><label>Fecha</label><input type="date" value="${st.fecha}" max="${hoy()}" onchange="this.value&&cambiarListaFiltro('fecha',this.value)"></div>
+    </div>
+    ${st.yaGuardada?`<p class="chip cN" style="display:inline-block;margin:10px 0 0">✔ Ya hay lista guardada este día · podés corregirla</p>`:''}
+    <button class="full" onclick="pedirFoto('asistencia')">📷 Cargar lista en papel con foto</button>
+    <div class="chips"><span class="chip cP">✔ ${c.P} presentes</span><span class="chip cT">⏰ ${c.T} tarde</span><span class="chip cA">✖ ${c.A} ausentes</span></div>
+    <p class="muted">Todos arrancan presentes. Tocá <b>A</b> si faltó o <b>T</b> si llegó tarde.</p>
+   </div>
+   <div class="card">
+    ${als.map(a=>{const m=st.marcas[a.id]||{estado:'P'};return `
+     <div class="alumno ${m.duda?'duda':''}">
+      <div class="nom">${esc(nombreCompleto(a))}${m.duda?`<small>⚠ Revisar: la IA leyó "${esc(m.leido||'?')}"</small>`:''}</div>
+      ${m.estado==='T'?`<input type="time" class="hora" value="${m.hora||''}" onchange="st.marcas['${a.id}'].hora=this.value;st.cambios=true">`:''}
+      <div class="est">${['P','T','A'].map(e=>`<button class="${e} ${m.estado===e?'on':''}" onclick="marcar('${a.id}','${e}')" aria-label="${ESTADO[e]}">${e}</button>`).join('')}</div>
+     </div>`}).join('')}
+    <button class="full verde" id="btnGuardar" onclick="guardarLista()">💾 Guardar asistencia${st.cambios?' *':''}</button>
+   </div>`;
+}
+function marcar(id,e){st.marcas[id]={estado:e,hora:e==='T'?(st.marcas[id]?.hora||ahora()):null};st.cambios=true;dibujarLista()}
+async function guardarLista(){
+  try{cargando(true,'Guardando…');
+    await api('asistencia_guardar',{fecha:st.fecha,curso:st.curso,marcas:st.marcas});
+    Object.values(st.marcas).forEach(m=>{delete m.duda;delete m.leido});st.yaGuardada=true;st.cambios=false;
+    toast('✅ Asistencia guardada');dibujarLista();
+  }catch(e){toast('No se guardó: '+e.message,4000)}finally{cargando(false)}
+}
+window.addEventListener('beforeunload',e=>{if(st.cambios){e.preventDefault();e.returnValue=''}});
+
+/* ================= ALUMNOS ================= */
+async function vAlumnos(){await traerAlumnos();dibujarAlumnos()}
+function dibujarAlumnos(){
+  const als=st.alumnos,cs=cursosDe(als);
+  st.filtroCurso=cs.includes(st.filtroCurso)?st.filtroCurso:'';
+  const ver=als.filter(a=>!st.filtroCurso||a.curso===st.filtroCurso);
+  const puedeBorrar=U.rol!=='profe';
+  $('#cont').innerHTML=`
+   ${st.nuevos?vRevisionAlumnos():''}
+   <div class="card">
+    <h2>Cargar alumnos</h2>
+    <label>Curso (ej: 3°A)</label>
+    <input id="cursoN" list="lc" value="${esc(st.ultimoCurso||'')}" placeholder="Si la foto lo dice, la IA lo detecta" oninput="st.ultimoCurso=this.value"><datalist id="lc">${cs.map(c=>`<option>${esc(c)}</option>`).join('')}</datalist>
+    <button class="full" onclick="pedirFoto('alumnos')">📷 Foto de lista escrita a mano</button>
+    <label>O escribí / pegá los nombres (uno por línea)</label>
+    <textarea id="txt" placeholder="Pérez, Juan&#10;Gómez María&#10;...">${esc(st.textoAlumnos||'')}</textarea>
+    <div class="fila"><button class="full sec" onclick="textoALista(false)">➕ Agregar así</button><button class="full" onclick="textoALista(true)">✨ Ordenar con IA</button></div>
+   </div>
+   <div class="card">
+    <div class="fila"><h2 style="margin:0">Alumnos (${ver.length})</h2>
+     <select onchange="st.filtroCurso=this.value;dibujarAlumnos()"><option value="">Todos los cursos</option>${cs.map(c=>`<option ${c===st.filtroCurso?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    ${ver.map(a=>`<div class="alumno"><div class="nom">${esc(nombreCompleto(a))}<small>${esc(a.curso)}</small></div>
+      <button class="ed" onclick="editarAlumno('${a.id}')" aria-label="Editar">✏️</button>
+      ${puedeBorrar?`<button class="x" onclick="borrarAlumno('${a.id}')" aria-label="Borrar">🗑</button>`:''}</div>`).join('')||'<p class="muted">Sin alumnos.</p>'}
+   </div>`;
+}
+function vRevisionAlumnos(){
+  return `<div class="card" style="border:2px solid var(--azul2)">
+   <h2>Revisá antes de guardar (${st.nuevos.length})</h2>
+   <p class="muted">Corregí lo que haga falta. Las filas en amarillo la IA no las leyó seguro.</p>
+   ${st.nuevos.map((a,i)=>`<div class="alumno ${a.duda?'duda':''}">
+     <div class="nom fila" style="gap:4px">
+      <input value="${esc(a.apellido)}" placeholder="Apellido" oninput="st.nuevos[${i}].apellido=this.value">
+      <input value="${esc(a.nombre)}" placeholder="Nombre" oninput="st.nuevos[${i}].nombre=this.value">
+      <input value="${esc(a.curso)}" placeholder="Curso" style="max-width:80px" oninput="st.nuevos[${i}].curso=this.value">
+     </div><button class="x" onclick="st.nuevos.splice(${i},1);if(!st.nuevos.length)st.nuevos=null;dibujarAlumnos()">✖</button></div>`).join('')}
+   <div class="fila"><button class="full sec" onclick="st.nuevos=null;dibujarAlumnos()">Cancelar</button><button class="full verde" onclick="guardarNuevos()">💾 Guardar todos</button></div>
+  </div>`;
+}
+async function textoALista(conIA){
+  const t=$('#txt').value.trim(),curso=$('#cursoN').value.trim();st.ultimoCurso=curso;st.textoAlumnos=t;
+  if(!t)return toast('Escribí al menos un nombre');
+  if(conIA){
+    try{cargando(true,'La IA está ordenando la lista…');st.nuevos=await IA.alumnos({texto:t,curso})}catch(e){return toast('IA: '+e.message,4000)}finally{cargando(false)}
+  }else{
+    st.nuevos=t.split(/\n+/).map(l=>l.replace(/^\s*\d+\s*[\.\)\-:]?\s*/,'').trim()).filter(Boolean).map(l=>{
+      let ap,no; if(l.includes(',')){[ap,...no]=l.split(',');no=no.join(' ')}else{const p=l.split(/\s+/);ap=p[0];no=p.slice(1).join(' ')}
+      return {apellido:cap(ap),nombre:cap(no),curso}});
+  }
+  if(!st.nuevos.length){st.nuevos=null;return toast('No se encontraron nombres')}
+  dibujarAlumnos();scrollTo(0,0);
+}
+async function guardarNuevos(){
+  if(st.nuevos.some(a=>!String(a.curso||'').trim()))return toast('Hay alumnos sin curso');
+  try{cargando(true,'Guardando…');
+    const r=await api('alumnos_agregar',{alumnos:st.nuevos});
+    st.nuevos=null;st.textoAlumnos='';await traerAlumnos(true);
+    toast(`✅ ${r.agregados} alumnos guardados${r.repetidos?` · ${r.repetidos} ya existían`:''}`);dibujarAlumnos();
+  }catch(e){toast('No se guardó: '+e.message,4000)}finally{cargando(false)}
+}
+async function editarAlumno(id){
+  const a=st.alumnos.find(x=>x.id===id);if(!a)return;
+  const v=await modal(`<h2>Editar alumno</h2><label>Apellido</label><input name="apellido" value="${esc(a.apellido)}"><label>Nombre</label><input name="nombre" value="${esc(a.nombre)}"><label>Curso</label><input name="curso" value="${esc(a.curso)}"><div class="fila" style="margin-top:14px"><button class="sec" data-r="no">Cancelar</button><button data-r="ok">Guardar</button></div>`);
+  if(!v)return;
+  try{cargando(true,'Guardando…');await api('alumno_editar',{id,...v});await traerAlumnos(true);st.marcasKey=null;toast('Alumno actualizado');dibujarAlumnos()}catch(e){toast(e.message)}finally{cargando(false)}
+}
+async function borrarAlumno(id){
+  const a=st.alumnos.find(x=>x.id===id);
+  if(!await confirmar(`¿Borrar a ${nombreCompleto(a)}? Su historial de asistencias se conserva.`,'Borrar'))return;
+  try{cargando(true);await api('alumno_borrar',{id});await traerAlumnos(true);st.marcasKey=null;dibujarAlumnos()}catch(e){toast(e.message)}finally{cargando(false)}
+}
+
+/* ================= PANEL DIRECTOR ================= */
+async function vPanel(){
+  st.pFecha=st.pFecha||hoy();
+  const [als,dia,rk]=await Promise.all([traerAlumnos(),api('asistencias',{fecha:st.pFecha}),api('resumen')]);
+  const porAl=Object.fromEntries(dia.asistencias.map(r=>[r.alumnoId,r]));
+  const tot={P:0,T:0,A:0,N:0};
+  const bloques=cursosDe(als).map(c=>{
+    const ac=als.filter(a=>a.curso===c),k={P:[],T:[],A:[],N:[]};
+    ac.forEach(a=>{const r=porAl[a.id];k[r?r.estado:'N'].push({a,r})});
+    Object.keys(k).forEach(x=>tot[x]+=k[x].length);
+    return `<details class="curso" ${k.A.length||k.T.length?'open':''}><summary>${esc(c)} <span class="muted">(${ac.length})</span>
+      <div class="chips"><span class="chip cP">✔ ${k.P.length}</span><span class="chip cT">⏰ ${k.T.length}</span><span class="chip cA">✖ ${k.A.length}</span>${k.N.length?`<span class="chip cN">Sin cargar ${k.N.length}</span>`:''}</div></summary>
+      ${k.A.length?`<b style="color:var(--rojo)">Ausentes</b>${k.A.map(x=>`<div class="alumno" onclick="verAlumno('${x.a.id}')" style="cursor:pointer"><div class="nom">${esc(nombreCompleto(x.a))}</div>›</div>`).join('')}`:''}
+      ${k.T.length?`<b style="color:var(--amarillo)">Tarde</b>${k.T.map(x=>`<div class="alumno" onclick="verAlumno('${x.a.id}')" style="cursor:pointer"><div class="nom">${esc(nombreCompleto(x.a))}</div><span class="muted">${x.r.hora||''}</span></div>`).join('')}`:''}
+      ${k.N.length===ac.length?'<p class="muted">Este curso no cargó la lista este día.</p>':(!k.A.length&&!k.T.length?'<p class="muted">Sin ausentes ni tardes.</p>':'')}
+    </details>`}).join('');
+  $('#cont').innerHTML=`
+   <div class="card">
+    <label>Día</label><input type="date" value="${st.pFecha}" max="${hoy()}" onchange="if(this.value){st.pFecha=this.value;ejecutar(vPanel)}">
+    <div class="stats" style="margin-top:12px">
+     <div class="cP"><div class="big">${tot.P}</div>Presentes</div>
+     <div class="cT"><div class="big">${tot.T}</div>Tarde</div>
+     <div class="cA"><div class="big">${tot.A}</div>Ausentes</div>
+    </div>
+    ${tot.N?`<p class="muted">${tot.N} alumnos sin lista cargada este día.</p>`:''}
+   </div>
+   <div class="card"><h2>Por curso</h2>${bloques||'<p class="muted">No hay alumnos cargados.</p>'}</div>
+   ${rk.ranking.length?`<div class="card"><h2>Más faltas (histórico)</h2><table><tr><th>Alumno</th><th>Curso</th><th>Faltas</th><th>Tardes</th></tr>
+     ${rk.ranking.map(x=>`<tr onclick="verAlumno('${x.id}')" style="cursor:pointer"><td>${esc(nombreCompleto(x))}</td><td>${esc(x.curso)}</td><td>${x.A}</td><td>${x.T}</td></tr>`).join('')}</table></div>`:''}
+   <div class="card"><h2>Exportar a Excel (CSV)</h2>
+    <div class="fila"><div><label>Desde</label><input type="date" id="exD" value="${hoy().slice(0,8)}01"></div><div><label>Hasta</label><input type="date" id="exH" value="${hoy()}"></div></div>
+    <button class="full sec" onclick="exportarCSV()">⬇ Descargar asistencias</button></div>`;
+}
+function verAlumno(id){st.bAlumno=id;tab='buscar';render()}
+async function exportarCSV(){
+  const desde=$('#exD').value,hasta=$('#exH').value;if(!desde||!hasta)return toast('Elegí las fechas');
+  try{cargando(true,'Preparando archivo…');
+    const r=await api('asistencias',{desde,hasta});
+    if(!r.asistencias.length)return toast('No hay asistencias en esas fechas');
+    const f=r.asistencias.map(x=>[fechaLinda(x.fecha),x.curso,x.apellido,x.nombre,ESTADO[x.estado],x.hora||''].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';'));
+    const txt='﻿Fecha;Curso;Apellido;Nombre;Estado;Hora\n'+f.join('\n'),nombre=`asistencias_${desde}_a_${hasta}.csv`;
+    const file=new File([txt],nombre,{type:'text/csv'});
+    if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:nombre}).catch(()=>{})}
+    else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=nombre;document.body.appendChild(a);a.click();a.remove()}
+  }catch(e){toast(e.message)}finally{cargando(false)}
+}
+
+/* ================= POR ALUMNO ================= */
+async function vBuscar(){
+  await traerAlumnos();
+  st.bQ=st.bQ||'';
+  st.bDesde=st.bDesde||hoy().slice(0,8)+'01';st.bHasta=st.bHasta||hoy();
+  const sel=st.alumnos.find(a=>a.id===st.bAlumno);
+  let detalle='';
+  if(sel){
+    const reg=(await api('asistencias',{alumnoId:sel.id,desde:st.bDesde,hasta:st.bHasta})).asistencias;
+    const c={P:0,T:0,A:0};reg.forEach(r=>c[r.estado]++);
+    detalle=`<div class="card" style="border:2px solid var(--azul2)">
+     <h2>${esc(nombreCompleto(sel))} <span class="muted">· ${esc(sel.curso)}</span></h2>
+     <div class="fila"><div><label>Desde</label><input type="date" value="${st.bDesde}" onchange="if(this.value){st.bDesde=this.value;ejecutar(vBuscar)}"></div><div><label>Hasta</label><input type="date" value="${st.bHasta}" onchange="if(this.value){st.bHasta=this.value;ejecutar(vBuscar)}"></div></div>
+     <div class="stats" style="margin-top:12px"><div class="cP"><div class="big">${c.P}</div>Presente</div><div class="cT"><div class="big">${c.T}</div>Tarde</div><div class="cA"><div class="big">${c.A}</div>Ausente</div></div>
+     ${reg.length?`<p class="muted">Asistencia: ${Math.round((c.P+c.T)/reg.length*100)}% de ${reg.length} días con lista</p>`:''}
+     <table><tr><th>Fecha</th><th>Estado</th><th>Hora</th></tr>${reg.map(r=>`<tr><td>${fechaLinda(r.fecha)}</td><td><span class="chip c${r.estado}">${ESTADO[r.estado]}</span></td><td>${r.hora||''}</td></tr>`).join('')||'<tr><td colspan=3 class="muted">Sin registros en el rango</td></tr>'}</table>
+     <button class="full sec" onclick="st.bAlumno=null;ejecutar(vBuscar)">Cerrar</button></div>`;
+  }
+  $('#cont').innerHTML=`${detalle}
+   <div class="card"><label>Buscar alumno o curso</label><input id="bq" value="${esc(st.bQ)}" placeholder="Nombre, apellido o curso" oninput="st.bQ=this.value;dibujarBusqueda()">
+   <div id="bres"></div></div>`;
+  dibujarBusqueda();
+}
+function dibujarBusqueda(){
+  const sinTilde=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  const q=sinTilde(st.bQ||'');
+  const lista=st.alumnos.filter(a=>sinTilde(nombreCompleto(a)+' '+a.curso).includes(q));
+  $('#bres').innerHTML=lista.slice(0,80).map(a=>`<div class="alumno" onclick="st.bAlumno='${a.id}';ejecutar(vBuscar);scrollTo(0,0)" style="cursor:pointer"><div class="nom">${esc(nombreCompleto(a))}<small>${esc(a.curso)}</small></div>›</div>`).join('')
+    +(lista.length>80?`<p class="muted">Hay ${lista.length-80} más, escribí para filtrar.</p>`:'')+(!lista.length?'<p class="muted">Sin resultados.</p>':'');
+}
+
+/* ================= CUENTAS (administrador) ================= */
+async function vCuentas(){
+  const [r,s]=await Promise.all([api('usuarios'),api('salud')]);
+  const pend=r.usuarios.filter(u=>!u.rol).length;
+  $('#cont').innerHTML=`
+   ${!s.ia?'<div class="aviso">⚠ Falta cargar la clave de la IA en Cloudflare (ANTHROPIC_API_KEY). Sin eso no funcionan las fotos.</div>':''}
+   ${!s.adminSecreto?'<div class="aviso">⚠ Conviene cargar ADMIN_PASSWORD en Cloudflare para que la contraseña del administrador no dependa del código público.</div>':''}
+   <div class="card"><h2>Cuentas (${r.usuarios.length})</h2>
+   ${pend?`<p class="chip cT" style="display:inline-block">${pend} esperando rol</p>`:''}
+   ${r.usuarios.map(u=>`<div class="alumno ${u.rol?'':'duda'}">
+     <div class="nom">${esc(u.nombre)}<small>@${esc(u.usuario)}</small></div>
+     <select style="width:auto" onchange="asignarRol('${u.id}',this.value)">
+      <option value="" ${!u.rol?'selected':''}>Sin rol</option>
+      <option value="profe" ${u.rol==='profe'?'selected':''}>Profe</option>
+      <option value="director" ${u.rol==='director'?'selected':''}>Director</option>
+     </select>
+     <button class="ed" onclick="resetPass('${u.id}','${esc(u.nombre)}')" aria-label="Cambiar contraseña">🔑</button>
+     <button class="x" onclick="borrarCuenta('${u.id}','${esc(u.nombre)}')" aria-label="Borrar cuenta">🗑</button></div>`).join('')||'<p class="muted">Todavía nadie creó una cuenta.</p>'}
+  </div>`;
+}
+async function asignarRol(id,rol){try{await api('usuario_rol',{id,rol});toast(rol?`Rol asignado: ${ROLES[rol]}`:'Rol quitado');ejecutar(vCuentas)}catch(e){toast(e.message)}}
+async function resetPass(id,nombre){
+  const v=await modal(`<h2>Nueva contraseña</h2><p class="muted">Para ${esc(nombre)}</p><input name="pass" type="text" autocomplete="off" placeholder="4 o más caracteres"><div class="fila" style="margin-top:12px"><button class="sec" data-r="no">Cancelar</button><button data-r="ok">Cambiar</button></div>`);
+  if(!v)return;if(v.pass.length<4)return toast('Muy corta');
+  try{await api('usuario_pass',{id,pass:v.pass});toast('Contraseña cambiada')}catch(e){toast(e.message)}
+}
+async function borrarCuenta(id,nombre){if(!await confirmar(`¿Borrar la cuenta de ${nombre}?`,'Borrar'))return;try{await api('usuario_borrar',{id});ejecutar(vCuentas)}catch(e){toast(e.message)}}
+
+/* ================= FOTO + IA ================= */
+let modoFoto='';
+async function pedirFoto(m){
+  if(m==='alumnos')st.ultimoCurso=$('#cursoN')?.value||st.ultimoCurso||'';
+  if(m==='asistencia'&&st.cambios&&!await confirmar('La foto va a reemplazar las marcas que hiciste a mano. ¿Seguir?','Seguir'))return;
+  modoFoto=m;const i=$('#foto');i.value='';i.click();
+}
+$('#foto').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    cargando(true,'Preparando la foto…');
+    const img=await comprimir(f);
+    cargando(true,'La IA está leyendo la foto… puede tardar unos segundos');
+    if(modoFoto==='alumnos'){
+      st.nuevos=await IA.alumnos({img,curso:st.ultimoCurso||''});
+      if(!st.nuevos.length){st.nuevos=null;toast('No se encontraron nombres en la foto')}
+      dibujarAlumnos();scrollTo(0,0);
+    }else{
+      const als=st.alumnos.filter(a=>a.curso===st.curso);
+      const r=await IA.asistencia({img,alumnos:als,fecha:st.fecha});
+      const ids=new Set(als.map(a=>a.id));let n=0;
+      r.marcas.forEach(m=>{if(!ids.has(m.id))return;const est=['P','T','A'].includes(m.estado)?m.estado:'P';
+        st.marcas[m.id]={estado:est,hora:est==='T'?(/^\d{1,2}:\d{2}$/.test(m.hora||'')?m.hora.padStart(5,'0'):ahora()):null,duda:(m.confianza??1)<0.75,leido:m.leido};n++});
+      st.cambios=true;dibujarLista();
+      toast(`La IA marcó ${n} de ${als.length} alumnos${r.no_encontrados?.length?` · No están en el curso: ${r.no_encontrados.join(', ')}`:''}. Revisá y guardá.`,6000);
+    }
+  }catch(err){toast('No se pudo leer: '+err.message,5000)}
+  finally{cargando(false)}
+};
+function comprimir(file,max=2000){return new Promise((ok,mal)=>{
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{let {naturalWidth:w,naturalHeight:h}=im;const s=Math.min(1,max/Math.max(w,h));w=Math.round(w*s);h=Math.round(h*s);
+    const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,w,h);x.filter='contrast(1.15) brightness(1.05)';x.drawImage(im,0,0,w,h);URL.revokeObjectURL(url);
+    ok(c.toDataURL('image/jpeg',0.85).split(',')[1])};
+  im.onerror=()=>{URL.revokeObjectURL(url);mal(Error('No se pudo abrir la imagen'))};im.src=url})}
+
+const IA={
+  async llamar(prompt,image){
+    const {text}=await api('ia',{prompt,image});
+    const m=String(text||'').match(/\{[\s\S]*\}/);if(!m)throw Error('La IA no devolvió datos. Probá con otra foto más clara.');
+    try{return JSON.parse(m[0])}catch{throw Error('La IA devolvió datos incompletos. Probá de nuevo.')}
+  },
+  async alumnos({img,texto,curso}){
+    const p=`Sos un experto en leer listas de alumnos de escuelas argentinas, incluso escritas a mano con mala letra, tachones, abreviaturas o faltas de ortografía.
+${img?'Leé la lista de la imagen con mucho cuidado, línea por línea. Ignorá encabezados, firmas, números de orden, columnas de fechas y marcas de asistencia.':'Este es el texto que escribió el usuario:\n"""\n'+texto+'\n"""'}
+Tareas:
+1. Extraé cada alumno separando APELLIDO y NOMBRE (en listas escolares suele ir primero el apellido; si hay coma, lo de antes de la coma es el apellido).
+2. Corregí errores obvios de nombres y apellidos comunes en Argentina (ej: "Gonsales"→"González", "Maria"→"María") y usá mayúscula inicial. No inventes nombres.
+3. Curso: ${curso?`usá "${curso}" salvo que la hoja indique claramente otro curso por alumno.`:'si la hoja indica curso o grado (ej "3°A", "5to B") usalo en formato como "3°A"; si no, dejalo vacío.'}
+4. Si una palabra es dudosa, poné tu mejor lectura y marcá "duda": true.
+Respondé SOLO con JSON, sin texto extra:
+{"alumnos":[{"apellido":"","nombre":"","curso":"","duda":false}]}`;
+    const r=await this.llamar(p,img);
+    return (r.alumnos||[]).map(a=>({apellido:cap(a.apellido),nombre:cap(a.nombre),curso:String(a.curso||curso||'').trim().toUpperCase(),duda:!!a.duda})).filter(a=>a.apellido||a.nombre);
+  },
+  async asistencia({img,alumnos,fecha}){
+    const lista=alumnos.map(a=>`${a.id} | ${a.apellido}, ${a.nombre}`).join('\n');
+    const p=`Sos un experto en leer planillas de asistencia escolares en papel, escritas a mano, de escuelas argentinas.
+Estos son los alumnos del curso (id | Apellido, Nombre):
+${lista}
+
+Leé la foto con mucho cuidado. Para cada alumno que aparece:
+- Relacionalo con el "id" correcto de la lista aunque esté abreviado, sin tilde, solo con apellido o con faltas de ortografía.
+- Interpretá la marca: P, ✓, •, "pte", "presente" → "P". A, X, ✗, "aus", "falta", "F" → "A". T, "tarde", "LT" o una hora escrita (ej 8:15) → "T" con esa hora en formato HH:MM.
+- Si la planilla tiene varias columnas de días, usá la del día ${fecha} (día ${Number(fecha.slice(8))}); si no se puede saber, usá la última columna con marcas.
+- Si la hoja solo lista ausentes o tardes, los demás alumnos de la lista son "P".
+- "confianza" de 0 a 1 según qué tan seguro estás de la lectura. "leido" = cómo aparece escrito en la foto.
+Respondé SOLO con JSON, sin texto extra:
+{"marcas":[{"id":"","estado":"P","hora":null,"confianza":1,"leido":""}],"no_encontrados":["nombres de la foto que no están en la lista"]}`;
+    const r=await this.llamar(p,img);r.marcas=Array.isArray(r.marcas)?r.marcas:[];return r;
+  }
+};
+
+render();
+if(TOKEN)api('yo').then(j=>{const antes=U?.rol;U=j.usuario;localStorage.setItem('listado_usuario',JSON.stringify(U));if(antes!==U.rol)render()}).catch(()=>{});
+</script>
+</body>
+</html>
